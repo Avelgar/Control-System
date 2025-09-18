@@ -108,3 +108,101 @@ graph TD
         K[Наблюдатель] --> E3
         K --> G1
     end
+
+### ER-диаграмма базы данных
+
+```mermaid
+erDiagram
+    USER {
+        int id PK
+        string email
+        string password_hash
+        string role
+        string full_name
+        datetime created_at
+    }
+    
+    PROJECT {
+        int id PK
+        string name
+        string description
+        string address
+        datetime start_date
+        datetime end_date
+    }
+    
+    STAGE {
+        int id PK
+        int project_id FK
+        string name
+        int order
+    }
+    
+    DEFECT {
+        int id PK
+        int stage_id FK
+        int creator_id FK
+        int assignee_id FK
+        string title
+        string description
+        string priority
+        string status
+        datetime due_date
+        datetime created_at
+    }
+    
+    COMMENT {
+        int id PK
+        int defect_id FK
+        int author_id FK
+        string content
+        datetime created_at
+    }
+    
+    ATTACHMENT {
+        int id PK
+        int defect_id FK
+        string filename
+        string filepath
+        datetime uploaded_at
+    }
+    
+    STATUS_HISTORY {
+        int id PK
+        int defect_id FK
+        string old_status
+        string new_status
+        int changed_by_id FK
+        datetime changed_at
+    }
+    
+    USER ||--o{ DEFECT : creates
+    USER ||--o{ COMMENT : writes
+    USER ||--o{ DEFECT : assigned_to
+    PROJECT ||--o{ STAGE : contains
+    STAGE ||--o{ DEFECT : has
+    DEFECT ||--o{ COMMENT : has
+    DEFECT ||--o{ ATTACHMENT : has
+    DEFECT ||--o{ STATUS_HISTORY : has
+
+
+stateDiagram-v2
+    [*] --> Новая
+    Новая --> В_работе: Назначение исполнителя
+    Новая --> Отменена: Отмена дефекта
+    В_работе --> На_проверке: Исправление завершено
+    В_работе --> Отменена: Отмена дефекта
+    На_проверке --> В_работе: Требуется доработка
+    На_проверке --> Закрыта: Успешная проверка
+    На_проверке --> Отменена: Отмена дефекта
+    Закрыта --> [*]
+    Отменена --> [*]
+
+
+## 🛠️ Технологический стек
+
+**Бэкенд**
+- *Язык:* Python 3.10+
+- Прозрачность процессов устранения
+- Автоматизация формирования отчетности
+- Сокращение времени на согласования
