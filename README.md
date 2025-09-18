@@ -109,19 +109,12 @@ graph TD
         K --> G1
     end
 
+### ER-диаграмма базы данных
 
+```mermaid
 erDiagram
-    USER ||--o{ DEFECT : creates
-    USER ||--o{ COMMENT : writes
-    USER ||--o{ ASSIGNMENT : receives
-    PROJECT ||--o{ STAGE : contains
-    STAGE ||--o{ DEFECT : has
-    DEFECT ||--o{ COMMENT : has
-    DEFECT ||--o{ ATTACHMENT : has
-    DEFECT ||--o{ STATUS_HISTORY : has
-    
     USER {
-        int id
+        int id PK
         string email
         string password_hash
         string role
@@ -130,7 +123,7 @@ erDiagram
     }
     
     PROJECT {
-        int id
+        int id PK
         string name
         string description
         string address
@@ -139,17 +132,17 @@ erDiagram
     }
     
     STAGE {
-        int id
-        int project_id
+        int id PK
+        int project_id FK
         string name
         int order
     }
     
     DEFECT {
-        int id
-        int stage_id
-        int creator_id
-        int assignee_id
+        int id PK
+        int stage_id FK
+        int creator_id FK
+        int assignee_id FK
         string title
         string description
         string priority
@@ -159,26 +152,35 @@ erDiagram
     }
     
     COMMENT {
-        int id
-        int defect_id
-        int author_id
+        int id PK
+        int defect_id FK
+        int author_id FK
         string content
         datetime created_at
     }
     
     ATTACHMENT {
-        int id
-        int defect_id
+        int id PK
+        int defect_id FK
         string filename
         string filepath
         datetime uploaded_at
     }
     
     STATUS_HISTORY {
-        int id
-        int defect_id
+        int id PK
+        int defect_id FK
         string old_status
         string new_status
-        int changed_by_id
+        int changed_by_id FK
         datetime changed_at
     }
+    
+    USER ||--o{ DEFECT : creates
+    USER ||--o{ COMMENT : writes
+    USER ||--o{ DEFECT : assigned_to
+    PROJECT ||--o{ STAGE : contains
+    STAGE ||--o{ DEFECT : has
+    DEFECT ||--o{ COMMENT : has
+    DEFECT ||--o{ ATTACHMENT : has
+    DEFECT ||--o{ STATUS_HISTORY : has
