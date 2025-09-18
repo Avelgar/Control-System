@@ -108,3 +108,77 @@ graph TD
         K[Наблюдатель] --> E3
         K --> G1
     end
+
+
+erDiagram
+    USER ||--o{ DEFECT : creates
+    USER ||--o{ COMMENT : writes
+    USER ||--o{ ASSIGNMENT : receives
+    PROJECT ||--o{ STAGE : contains
+    STAGE ||--o{ DEFECT : has
+    DEFECT ||--o{ COMMENT : has
+    DEFECT ||--o{ ATTACHMENT : has
+    DEFECT ||--o{ STATUS_HISTORY : has
+    
+    USER {
+        int id
+        string email
+        string password_hash
+        string role
+        string full_name
+        datetime created_at
+    }
+    
+    PROJECT {
+        int id
+        string name
+        string description
+        string address
+        datetime start_date
+        datetime end_date
+    }
+    
+    STAGE {
+        int id
+        int project_id
+        string name
+        int order
+    }
+    
+    DEFECT {
+        int id
+        int stage_id
+        int creator_id
+        int assignee_id
+        string title
+        string description
+        string priority
+        string status
+        datetime due_date
+        datetime created_at
+    }
+    
+    COMMENT {
+        int id
+        int defect_id
+        int author_id
+        string content
+        datetime created_at
+    }
+    
+    ATTACHMENT {
+        int id
+        int defect_id
+        string filename
+        string filepath
+        datetime uploaded_at
+    }
+    
+    STATUS_HISTORY {
+        int id
+        int defect_id
+        string old_status
+        string new_status
+        int changed_by_id
+        datetime changed_at
+    }
