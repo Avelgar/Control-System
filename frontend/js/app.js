@@ -2,7 +2,6 @@ import ModalAuth from './components/ModalAuth.js';
 
 const { createApp } = Vue;
 
-// Основное приложение
 const app = createApp({
     components: {
         'modal-auth': ModalAuth
@@ -11,18 +10,11 @@ const app = createApp({
         return {
             showAuth: false,
             activeTab: 'login',
-            loginForm: {
-                username: '',
-                password: ''
-            },
-            registerForm: {
-                fullName: '',
-                email: '',
-                username: '',
-                password: '',
-                confirmPassword: ''
-            }
+            currentUser: null
         };
+    },
+    mounted() {
+        this.checkAuthStatus();
     },
     methods: {
         openModal(tab) {
@@ -34,22 +26,47 @@ const app = createApp({
             this.showAuth = false;
             document.body.style.overflow = 'auto';
         },
-        handleLogin(loginData) {
-            console.log('Логин:', loginData);
-            // Здесь будет вызов API
-            alert('Функционал входа будет реализован в бэкенде');
+        async handleLogin(data) {
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            this.currentUser = data.user;
             this.closeModal();
         },
-        handleRegister(registerData) {
-            if (registerData.password !== registerData.confirmPassword) {
-                alert('Пароли не совпадают');
-                return;
-            }
+        async checkAuthStatus() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
             
-            console.log('Регистрация:', registerData);
-            // Здесь будет вызов API
-            alert('Функционал регистрации будет реализован в бэкенде');
-            this.closeModal();
+            if (token && user) {
+                try {
+                    const response = await fetch('http://blue.fnode.me:25526/users/me', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        this.currentUser = JSON.parse(user);
+                    } else {
+                        this.logout();
+                    }
+                } catch (error) {
+                    this.logout();
+                }
+            }
+        },
+        logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            this.currentUser = null;
+        },
+        getRoleName(role) {
+            const roleNames = {
+                'observer': 'Наблюдатель',
+                'engineer': 'Инженер',
+                'manager': 'Менеджер',
+                'admin': 'Администратор'
+            };
+            return roleNames[role] || role;
         }
     }
 });

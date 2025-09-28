@@ -67,6 +67,12 @@ header {
 .nav-buttons {
     display: flex;
     gap: 15px;
+    align-items: center;
+}
+
+.user-info {
+    color: var(--light);
+    font-weight: 500;
 }
 
 .btn {
@@ -153,35 +159,28 @@ header {
     color: var(--primary);
 }
 
-.info-section {
-    background-color: white;
-    padding: 3rem 0;
+/* Auth Status */
+.auth-status {
     margin: 2rem 0;
-    border-radius: 10px;
+}
+
+.status-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
     box-shadow: var(--shadow);
+    text-align: left;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
-.info-section h2 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: var(--primary);
+.status-card.success {
+    border-left: 4px solid var(--success);
 }
 
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-}
-
-.info-item {
-    text-align: center;
-    padding: 1rem;
-}
-
-.info-item .icon {
-    font-size: 2.5rem;
+.status-card h3 {
+    color: var(--success);
     margin-bottom: 1rem;
-    color: var(--secondary);
 }
 
 /* Footer */
@@ -229,5 +228,14 @@ footer {
 
     .features {
         grid-template-columns: 1fr;
+    }
+    
+    .nav-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .user-info {
+        text-align: center;
     }
 }
