@@ -8,6 +8,35 @@
 ## Ссылка на проект:
 http://blue.fnode.me:25526/
 
+## Структура проекта:
+construction-control-system/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── database.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   └── auth.py
+│   ├── requirements.txt
+│   ├── run.py
+│   └── .env
+└── frontend/
+    ├── index.html
+    ├── main.html
+    ├── css/
+    │   ├── styles.css
+    │	├── main.css
+    │   └── components/
+    │       ├── notifications.js
+    │       └── modals.css
+    └── js/
+        ├── app.js
+	├── main.js
+        └── components/
+	    ├── notifications.js
+            └── modals.js
+
 ## 📋 Содержание
 
 - [О системе](#-о-системе)
