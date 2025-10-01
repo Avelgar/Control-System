@@ -9,6 +9,7 @@
 http://blue.fnode.me:25526/
 
 ## Структура проекта:
+```
 construction-control-system/
 ├── backend/
 │   ├── app/
@@ -36,6 +37,7 @@ construction-control-system/
         └── components/
 	    ├── notifications.js
             └── modals.js
+```
 
 ## 📋 Содержание
 
