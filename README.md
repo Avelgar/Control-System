@@ -33,9 +33,9 @@ construction-control-system/
     │       └── modals.css
     └── js/
         ├── app.js
-	├── main.js
+		├── main.js
         └── components/
-	    ├── notifications.js
+	    	├── notifications.js
             └── modals.js
 ```
 
