@@ -1,5 +1,3 @@
-// notifications.js
-
 class NotificationSystem {
     constructor() {
         this.container = null;

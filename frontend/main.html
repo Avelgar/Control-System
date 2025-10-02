@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Control System - Панель управления</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components/notifications.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <div id="main-app">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <div class="logo-icon">🏗️</div>
+                        <div class="logo-text">СистемаКонтроля</div>
+                    </div>
+                    <div class="auth-buttons" v-if="userProfile">
+                        <span class="user-welcome">Добро пожаловать, {{ userProfile.full_name }}</span>
+                        <span class="user-role" :class="userProfile.role">({{ getRoleName(userProfile.role) }})</span>
+                        <button @click="logout" class="btn btn-primary">Выйти</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Загрузка -->
+            <div v-if="isLoading" class="loading-section">
+                <div class="loading-spinner"></div>
+                <p>Загрузка данных...</p>
+            </div>
+
+            <!-- Основной контент -->
+            <div v-else class="dashboard">
+                <!-- 👑 ПАНЕЛЬ МЕНЕДЖЕРА -->
+                <div v-if="userProfile.role === 'manager'" class="manager-dashboard">
+                    <h1>Панель управления менеджера</h1>
+                    
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <h3>Всего проектов</h3>
+                            <div class="stat-number">{{ stats.totalProjects || 0 }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Активные дефекты</h3>
+                            <div class="stat-number">{{ stats.activeDefects || 0 }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Завершённые</h3>
+                            <div class="stat-number">{{ stats.completedDefects || 0 }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Просроченные</h3>
+                            <div class="stat-number warning">{{ stats.overdueDefects || 0 }}</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button @click="showCreateProject = true" class="btn btn-primary">
+                            ➕ Создать проект
+                        </button>
+                        <button @click="showCreateDefect = true" class="btn btn-secondary">
+                            🐛 Создать дефект
+                        </button>
+                        <button @click="loadUsers" class="btn btn-info">
+                            👥 Управление пользователями
+                        </button>
+                        <button @click="generateReport" class="btn btn-success">
+                            📊 Сформировать отчёт
+                        </button>
+                    </div>
+
+                    <!-- Быстрый просмотр проектов -->
+                    <div class="quick-section">
+                        <h2>Проекты</h2>
+                        <div class="projects-grid">
+                            <div v-for="project in projects" :key="project.id" class="project-card">
+                                <h4>{{ project.name }}</h4>
+                                <p>{{ project.description }}</p>
+                                <div class="project-meta">
+                                    <span>Статус: {{ project.status }}</span>
+                                    <span>Дефектов: {{ getProjectDefectsCount(project.id) }}</span>
+                                </div>
+                                <button @click="viewProject(project.id)" class="btn btn-small">
+                                    Подробнее
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 👷 ПАНЕЛЬ ИНЖЕНЕРА -->
+                <div v-else-if="userProfile.role === 'engineer'" class="engineer-dashboard">
+                    <h1>Рабочая панель инженера</h1>
+                    
+                    <div class="engineer-stats">
+                        <div class="stat-card">
+                            <h3>Мои дефекты</h3>
+                            <div class="stat-number">{{ getMyDefectsCount() }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>В работе</h3>
+                            <div class="stat-number">{{ getDefectsByStatus('в работе') }}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>На проверке</h3>
+                            <div class="stat-number">{{ getDefectsByStatus('на проверке') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button @click="showCreateDefect = true" class="btn btn-primary">
+                            🐛 Зарегистрировать дефект
+                        </button>
+                        <button @click="loadMyDefects" class="btn btn-secondary">
+                            📋 Мои дефекты
+                        </button>
+                        <button @click="showAllDefects = true" class="btn btn-info">
+                            👀 Все дефекты проекта
+                        </button>
+                    </div>
+
+                    <!-- Мои активные дефекты -->
+                    <div class="quick-section">
+                        <h2>Мои активные задачи</h2>
+                        <div v-if="myDefects.length > 0" class="defects-list">
+                            <div v-for="defect in myDefects.slice(0, 5)" :key="defect.id" 
+                                 class="defect-item" :class="defect.status">
+                                <div class="defect-header">
+                                    <h4>{{ defect.title }}</h4>
+                                    <span class="defect-priority" :class="defect.priority">
+                                        {{ defect.priority }}
+                                    </span>
+                                </div>
+                                <p class="defect-desc">{{ defect.description }}</p>
+                                <div class="defect-footer">
+                                    <span>Статус: {{ defect.status }}</span>
+                                    <span>Срок: {{ formatDate(defect.due_date) }}</span>
+                                    <button @click="updateDefectStatus(defect.id)" class="btn btn-small">
+                                        Обновить статус
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="empty-state">
+                            <p>Нет активных дефектов</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 👀 ПАНЕЛЬ НАБЛЮДАТЕЛЯ -->
+                <div v-else class="observer-dashboard">
+                    <h1>Панель мониторинга</h1>
+                    
+                    <div class="observer-stats">
+                        <div class="stat-card large">
+                            <h3>Общая статистика</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span>Всего проектов:</span>
+                                    <strong>{{ stats.totalProjects || 0 }}</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>Всего дефектов:</span>
+                                    <strong>{{ stats.totalDefects || 0 }}</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>Выполнено:</span>
+                                    <strong class="success">{{ stats.completedDefects || 0 }}</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>В работе:</span>
+                                    <strong class="warning">{{ stats.activeDefects || 0 }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button @click="loadProjects" class="btn btn-primary">
+                            📁 Просмотр проектов
+                        </button>
+                        <button @click="loadAllDefects" class="btn btn-secondary">
+                            📋 Просмотр дефектов
+                        </button>
+                        <button @click="generateReport" class="btn btn-success">
+                            📊 Сформировать отчёт
+                        </button>
+                    </div>
+
+                    <!-- Сводка по проектам -->
+                    <div class="quick-section">
+                        <h2>Обзор проектов</h2>
+                        <div class="projects-overview">
+                            <div v-for="project in projects.slice(0, 3)" :key="project.id" class="project-overview-card">
+                                <h4>{{ project.name }}</h3>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" :style="{width: getProjectProgress(project.id) + '%'}"></div>
+                                </div>
+                                <div class="project-stats">
+                                    <span>Дефектов: {{ getProjectDefectsCount(project.id) }}</span>
+                                    <span>Завершено: {{ getProjectCompletedCount(project.id) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Информация о пользователе -->
+                <div class="user-card">
+                    <h3>Информация о пользователе</h3>
+                    <div class="user-info">
+                        <div class="info-item">
+                            <strong>Email:</strong> {{ userProfile.email }}
+                        </div>
+                        <div class="info-item">
+                            <strong>Логин:</strong> {{ userProfile.login }}
+                        </div>
+                        <div class="info-item">
+                            <strong>ФИО:</strong> {{ userProfile.full_name }}
+                        </div>
+                        <div class="info-item">
+                            <strong>Роль:</strong> 
+                            <span class="role-badge" :class="userProfile.role">
+                                {{ getRoleName(userProfile.role) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Модальные окна будут добавляться по мере необходимости -->
+
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>СистемаКонтроля</h3>
+                        <p>Система управления дефектами строительных объектов</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Контакты</h3>
+                        <p>Email: info@sistemakontrolya.ru</p>
+                        <p>Телефон: +7 (XXX) XXX-XX-XX</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2023 ООО "СистемаКонтроля". Все права защищены.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

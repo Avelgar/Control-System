@@ -9,6 +9,8 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
 }
 
 .auth-modal {
@@ -19,6 +21,7 @@
     max-width: 450px;
     overflow: hidden;
     position: relative;
+    margin: auto;
 }
 
 .close-btn {
@@ -30,6 +33,7 @@
     font-size: 1.5rem;
     cursor: pointer;
     color: #777;
+    z-index: 1;
 }
 
 .auth-tabs {
@@ -43,6 +47,8 @@
     padding: 1rem;
     background: #f8f9fa;
     font-weight: 600;
+    border: none;
+    cursor: pointer;
 }
 
 .auth-tab.active {
@@ -71,6 +77,7 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
+    box-sizing: border-box;
 }
 
 .form-text {
@@ -79,17 +86,53 @@
     margin-top: 5px;
 }
 
+body.modal-open {
+    overflow: hidden;
+}
+
 @media (max-width: 768px) {
-    .header-content {
+    .modal-overlay {
+        padding: 10px;
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+
+    .auth-modal {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 8px;
+    }
+
+    .auth-form {
+        padding: 1.5rem;
+    }
+
+    .auth-tabs {
         flex-direction: column;
-        gap: 1rem;
     }
 
-    .hero h1 {
-        font-size: 2rem;
+    .auth-tab {
+        padding: 0.75rem;
     }
 
-    .features {
-        grid-template-columns: 1fr;
+    .close-btn {
+        top: 10px;
+        right: 10px;
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-form {
+        padding: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-control {
+        padding: 10px;
+        font-size: 16px;
     }
 }

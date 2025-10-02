@@ -18,8 +18,10 @@
                         <div class="logo-icon">🏗️</div>
                         <div class="logo-text">СистемаКонтроля</div>
                     </div>
-                    <div class="nav-buttons">
-                        <button class="btn btn-primary" @click="showRegister = true">Регистрация</button>
+
+                    <div class="auth-buttons">
+                        <button @click="openModal('login')" class="btn btn-primary">Войти</button>
+                        <button @click="openModal('register')" class="btn btn-secondary">Зарегистрироваться</button>
                     </div>
                 </div>
             </div>
@@ -70,9 +72,9 @@
         </footer>
 
         <!-- Модальное окно регистрации -->
-        <div class="modal-overlay" v-if="showRegister" @click.self="showRegister = false">
+        <div class="modal-overlay" v-if="showRegister" @click.self="closeModals">
             <div class="auth-modal">
-                <button class="close-btn" @click="showRegister = false">&times;</button>
+                <button class="close-btn" @click="closeModals">&times;</button>
                 
                 <div class="auth-tabs">
                     <div class="auth-tab active">Регистрация</div>
@@ -101,15 +103,41 @@
                         <label for="reg-confirm">Подтверждение пароля*</label>
                         <input type="password" id="reg-confirm" class="form-control" v-model="registerData.confirmPassword" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        Зарегистрироваться
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="isLoading">
+                        {{ isLoading ? 'Загрузка...' : 'Зарегистрироваться' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="modal-overlay" v-if="showLogin" @click.self="closeModals">
+            <div class="auth-modal">
+                <button class="close-btn" @click="closeModals">&times;</button>
+                
+                <div class="auth-tabs">
+                    <div class="auth-tab active">Вход</div>
+                </div>
+
+                <form class="auth-form" @submit.prevent="handleLoginSubmit">
+                    <div class="form-group">
+                        <label for="log-login">Email/login*</label>
+                        <input type="text" id="log-login" class="form-control" v-model="loginData.login" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Пароль*</label>
+                        <input type="password" id="log-password" class="form-control" v-model="loginData.password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="isLoading">
+                        {{ isLoading ? 'Загрузка...' : 'Войти' }}
                     </button>
                 </form>
             </div>
         </div>
     </div>
-
-    <script src="js/components/notifications.js"></script>
+    
+    
+    
+	<script src="js/components/notifications.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

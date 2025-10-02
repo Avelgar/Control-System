@@ -1,0 +1,1 @@
+export const API_BASE_URL = 'http://blue.fnode.me:25526';

@@ -5,10 +5,18 @@ import smtplib
 from email.mime.text import MIMEText
 import os
 from dotenv import load_dotenv
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+from sqlalchemy.orm import Session  # Добавляем импорт Session
 
 load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# JWT настройки
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def check_password(password):
     if len(password) < 8:
@@ -108,3 +116,32 @@ def send_registration_email(email: str, token: str):
     except Exception as e:
         print(f"Failed to send email to {email}: {str(e)}")
         raise Exception(f"Ошибка отправки email: {str(e)}")
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+# Добавляем в существующий auth.py
+def get_current_user_from_token(token: str, db: Session):
+    """Получить пользователя из JWT токена"""
+    payload = verify_token(token)
+    if not payload:
+        return None
+    
+    email = payload.get("email")
+    if not email:
+        return None
+    
+    return db.query(User).filter(User.email == email).first()

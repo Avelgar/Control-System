@@ -1,172 +1,110 @@
-const { createApp } = Vue;
+import { API_BASE_URL } from './config.js';
+import { modalMethods } from './components/modals.js';
 
-const API_BASE_URL = 'http://blue.fnode.me:25526';
+const { createApp } = Vue;
 
 const app = createApp({
     data() {
         return {
             showRegister: false,
+            showLogin: false,
             isLoading: false,
+            userEmail: '',
+            userProfile: null,
             registerData: {
                 fullName: '',
                 email: '',
                 username: '',
                 password: '',
                 confirmPassword: ''
+            },
+            loginData: {
+                login: '',
+                password: ''
             }
         };
     },
-    mounted() {
+    async mounted() {
+        await this.checkAuthStatus();
         this.checkUrlMessages();
     },
     methods: {
-        async handleRegisterSubmit() {
-            // Валидация на клиенте
-            if (!this.validateForm()) {
+        ...modalMethods,
+
+        async checkAuthStatus() {
+            const token = localStorage.getItem('authToken');
+            const email = localStorage.getItem('userEmail');
+            
+            if (token && email) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/main`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.userEmail = email;
+                        this.userProfile = data.user;
+                        console.log('User authenticated:', data.user);
+                        
+                        window.location.href = '/main-page';
+                    } else {
+                        this.clearAuthData();
+                        console.log('Token invalid, cleared auth data');
+                    }
+                } catch (error) {
+                    console.error('Auth check error:', error);
+                    this.clearAuthData();
+                }
+            } else if (token || email){
+                this.clearAuthData();
+            }
+        },
+
+        async navigateToMain() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                notificationSystem.error('Требуется аутентификация', 'Ошибка');
                 return;
             }
-
-            this.isLoading = true;
-
+            
             try {
-                const userData = {
-                    username: this.registerData.username,
-                    email: this.registerData.email,
-                    full_name: this.registerData.fullName,
-                    password: this.registerData.password,
-                    confirm_password: this.registerData.confirmPassword
-                };
-                
-                const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(userData)
+                const response = await fetch(`${API_BASE_URL}/main`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
+                    notificationSystem.success('Доступ к защищенной странице разрешен', 'Успех');
+                    console.log('Main page data:', data);
                     
-                    notificationSystem.success(
-                        'Регистрация успешна! Проверьте вашу почту для подтверждения аккаунта.',
-                        'Успешная регистрация',
-                        8000
-                    );
-                    
-                    this.showRegister = false;
-                    this.resetForm();
                 } else {
-                    const error = await response.json();
-                    notificationSystem.error(
-                        error.detail || 'Произошла ошибка при регистрации',
-                        'Ошибка регистрации'
-                    );
+                    this.clearAuthData();
+                    notificationSystem.error('Сессия истекла. Войдите снова.', 'Ошибка доступа');
                 }
             } catch (error) {
-                console.error('Registration error:', error);
-                notificationSystem.error(
-                    'Не удалось подключиться к серверу. Проверьте подключение к интернету.',
-                    'Ошибка соединения'
-                );
-            } finally {
-                this.isLoading = false;
-            }
-        },
-        
-        validateForm() {
-            // Очистка предыдущих сообщений
-            this.clearFormErrors();
-
-            let isValid = true;
-
-            // Проверка ФИО
-            if (!this.registerData.fullName.trim()) {
-                this.showFieldError('reg-fullname', 'Введите ФИО');
-                isValid = false;
-            } else if (this.registerData.fullName.trim().length < 2) {
-                this.showFieldError('reg-fullname', 'ФИО слишком короткое');
-                isValid = false;
-            }
-
-            // Проверка email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!this.registerData.email) {
-                this.showFieldError('reg-email', 'Введите email');
-                isValid = false;
-            } else if (!emailRegex.test(this.registerData.email)) {
-                this.showFieldError('reg-email', 'Введите корректный email');
-                isValid = false;
-            }
-
-            // Проверка логина
-            const loginRegex = /^[a-zA-Z0-9_]+$/;
-            if (!this.registerData.username) {
-                this.showFieldError('reg-username', 'Введите логин');
-                isValid = false;
-            } else if (this.registerData.username.length < 3) {
-                this.showFieldError('reg-username', 'Логин должен содержать минимум 3 символа');
-                isValid = false;
-            } else if (!loginRegex.test(this.registerData.username)) {
-                this.showFieldError('reg-username', 'Логин может содержать только латинские буквы, цифры и подчеркивание');
-                isValid = false;
-            }
-
-            // Проверка пароля
-            if (!this.registerData.password) {
-                this.showFieldError('reg-password', 'Введите пароль');
-                isValid = false;
-            } else if (this.registerData.password.length < 8) {
-                this.showFieldError('reg-password', 'Пароль должен содержать минимум 8 символов');
-                isValid = false;
-            }
-
-            // Проверка подтверждения пароля
-            if (!this.registerData.confirmPassword) {
-                this.showFieldError('reg-confirm', 'Подтвердите пароль');
-                isValid = false;
-            } else if (this.registerData.password !== this.registerData.confirmPassword) {
-                this.showFieldError('reg-confirm', 'Пароли не совпадают');
-                isValid = false;
-            }
-
-            return isValid;
-        },
-
-        showFieldError(fieldId, message) {
-            const field = document.getElementById(fieldId);
-            if (field) {
-                field.classList.add('error');
-                
-                // Создаем элемент ошибки
-                let errorElement = field.parentNode.querySelector('.field-error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'field-error';
-                    field.parentNode.appendChild(errorElement);
-                }
-                errorElement.textContent = message;
-                errorElement.style.display = 'block';
+                console.error('Navigation error:', error);
+                notificationSystem.error('Ошибка при проверке доступа', 'Ошибка');
             }
         },
 
-        clearFormErrors() {
-            const errors = document.querySelectorAll('.field-error');
-            errors.forEach(error => error.remove());
-            
-            const fields = document.querySelectorAll('.form-control');
-            fields.forEach(field => field.classList.remove('error'));
+        clearAuthData() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            this.userEmail = '';
+            this.userProfile = null;
         },
 
-        resetForm() {
-            this.registerData = {
-                fullName: '',
-                email: '',
-                username: '',
-                password: '',
-                confirmPassword: ''
-            };
-            this.clearFormErrors();
+        logout() {
+            this.clearAuthData();
+            notificationSystem.success('Вы успешно вышли из системы', 'Выход');
         },
 
         checkUrlMessages() {
